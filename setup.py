@@ -1,10 +1,13 @@
 import setuptools
+import os
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
-with open("requirements.txt", "r") as f:
-    requirements = f.readlines()
+requirements=[]
+if os.path.isfile('requirements.txt'):
+    with open("requirements.txt", "r") as f:
+        requirements = f.readlines()
 
 setuptools.setup(
     name="cdtui",
