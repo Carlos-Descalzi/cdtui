@@ -8,7 +8,7 @@ KEY_LEFT = keystroke([27, 91, 68])
 KEY_PGUP = keystroke([27, 91, 53])
 KEY_PGDN = keystroke([27, 91, 54])
 KEY_HOME = keystroke([27, 91, 72])
-KEY_SHIFT_TAB = keystroke([27,91,90])
+KEY_SHIFT_TAB = keystroke([27, 91, 90])
 
 KEY_ESC = 27
 KEY_TAB = 9

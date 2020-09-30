@@ -1,4 +1,4 @@
-from . import ansi,kbd
+from . import ansi, kbd
 from .base import Rect, COLORS
 import time
 import sys

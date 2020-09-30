@@ -9,10 +9,9 @@ class TextView(View):
         self._scroll_x = 0
         self._scroll_y = 0
 
-    def _sanitize(self, text):
-        return list(map(self._sanitize_line, text.split("\n")))
-
     def set_text(self, text):
+        self._scroll_x = 0
+        self._scroll_y = 0
         self._text = self._sanitize(text)
         self.queue_update()
 
@@ -21,8 +20,11 @@ class TextView(View):
 
     text = property(get_text, set_text)
 
+    def _sanitize(self, text):
+        return list(map(self._sanitize_line, text.split("\n")))
+
     def _sanitize_line(self, text_line):
-        return text_line.replace("\n", "").replace(
+        return text_line.replace("\r","").replace("\n", "").replace(
             ansi.RESET, ansi.RESET + self.get_color("bg") + self.get_color("fg")
         )
 

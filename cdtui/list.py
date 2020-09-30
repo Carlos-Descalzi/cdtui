@@ -28,6 +28,7 @@ class ListModel(metaclass=ABCMeta):
     def get_item(self, index):
         pass
 
+
 class DefaultListModel(ListModel):
     def __init__(self, items=[]):
         super().__init__()
@@ -47,6 +48,7 @@ class DefaultListModel(ListModel):
         self.notify_list_changed()
 
     items = property(get_items, set_items)
+
 
 class ListView(View):
     def __init__(self, rect=None, model=None, selectable=False):
@@ -100,8 +102,14 @@ class ListView(View):
             self._model.on_list_changed.add(self._model_changed)
 
     def _model_changed(self, *_):
-        self._current_index = 0
-        self._scroll_y = 0
+        if self._current_index >= self._model.get_item_count():
+            if self._model.get_item_count() > 0:
+                self._current_index = self._model.get_item_count() -1
+                self._scroll_y = max(0, self._current_index-1)
+            else:
+                self._current_index = -1
+                self._scroll_y = 0
+
         self.queue_update()
 
     def get_model(self):

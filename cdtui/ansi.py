@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import re
+import unicodedata
 
 UNDERLINE = "\u001b[4m"
 BOLD = "\u001b[1m"
@@ -71,6 +72,11 @@ class UiWriter:
         except:
             pass
 
+    def trunc(self, length):
+        while len(self) > length:
+            self._buffer = self._buffer[0:-1]
+        return self
+
     def __str__(self):
         return self._buffer
 
@@ -87,7 +93,7 @@ def _ansi_string_len(string):
         elif c in "mHJ" and skip:
             skip = False
         elif not skip:
-            l += 1
+            l += 2 if unicodedata.east_asian_width(c) == 'W' else 1
     return l
 
 

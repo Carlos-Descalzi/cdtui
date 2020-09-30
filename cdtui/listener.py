@@ -1,4 +1,6 @@
+
 class ListenerHandler:
+
     def __init__(self, source):
         self._source = source
         self._listeners = []
@@ -8,7 +10,8 @@ class ListenerHandler:
         return self
 
     def remove(self, listener):
-        self._listeners.remove(listener)
+        if listener in self._listeners:
+            self._listeners.remove(listener)
         return self
 
     def __call__(self, *args, **kwargs):
