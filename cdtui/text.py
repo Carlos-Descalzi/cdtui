@@ -1,5 +1,6 @@
 from .view import View
 from . import ansi, kbd
+import logging
 
 
 class TextView(View):

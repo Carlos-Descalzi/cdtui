@@ -6,6 +6,7 @@ import sys
 import tty
 from abc import ABCMeta, abstractmethod
 import logging
+import traceback
 from .listener import ListenerHandler
 
 
@@ -139,79 +140,104 @@ class ListView(View):
         return str_value
 
     def update(self):
-        max_items = self._rect.height
-        last_item = self._model.get_item_count() - 1
+        try:
+            max_items = self._rect.height
+            last_item = self._model.get_item_count() - 1
 
-        from_index = self._scroll_y
-        to_index = min(self._scroll_y + max_items - 1, last_item)
+            from_index = self._scroll_y
+            to_index = min(self._scroll_y + max_items - 1, last_item)
 
-        current_index = (
-            self._current_index - self._scroll_y if self._current_index != -1 else -1
-        )
-        selected_index = (
-            (self._selected_index - self._scroll_y)
-            if self._selected_index != -1
-            else -1
-        )
-        for i in range(from_index, to_index + 1):
-            item = self._model.get_item(i)
-            item_index = i - self._scroll_y
+            current_index = (
+                self._current_index - self._scroll_y if self._current_index != -1 else -1
+            )
+            selected_index = (
+                (self._selected_index - self._scroll_y)
+                if self._selected_index != -1
+                else -1
+            )
+            for i in range(from_index, to_index + 1):
+                item = self._model.get_item(i)
+                item_index = i - self._scroll_y
 
-            current = item_index == current_index
-            selected = self._selectable and item_index == selected_index
+                current = item_index == current_index
+                selected = self._selectable and item_index == selected_index
 
-            text = self.render_item(item, current, selected)
-            (
-                ansi.begin()
-                .gotoxy(self._rect.x, self._rect.y + i - self._scroll_y)
-                .writefill(text, self._rect.width)
-            ).put()
+                text = self.render_item(item, current, selected)
+                (
+                    ansi.begin()
+                    .gotoxy(self._rect.x, self._rect.y + i - self._scroll_y)
+                    .writefill(text, self._rect.width)
+                ).put()
 
-        last_y = self._rect.y + (to_index + 1 - from_index)
-        max_y = self._rect.y + self._rect.height - 1
+            last_y = self._rect.y + (to_index + 1 - from_index)
+            max_y = self._rect.y + self._rect.height - 1
 
-        ui_buff = ansi.begin()
-        while last_y <= max_y:
-            ui_buff.gotoxy(self._rect.x, last_y).writefill("", self._rect.width)
-            last_y += 1
-        ui_buff.put()
+            ui_buff = ansi.begin()
+            while last_y <= max_y:
+                ui_buff.gotoxy(self._rect.x, last_y).writefill("", self._rect.width)
+                last_y += 1
+            ui_buff.put()
+        except Exception as e:
+            logging.error(f'{e} - {traceback.format_exc()}')
 
     def on_key_press(self, key):
+        try:
+            item_count = self._model.get_item_count()
+            if key == kbd.KEY_UP:
+                self._scroll_up()
+            elif key == kbd.KEY_DOWN:
+                self._scroll_down()
+            elif key == kbd.KEY_PGDN:
+                self._page_down()
+            elif key == kbd.KEY_PGUP:
+                self._page_up()
+            elif key == kbd.KEY_HOME:
+                self._go_home()
+            elif key == kbd.KEY_ENTER:
+                if self._selectable:
+                    self._select(self._current_index)
+        except Exception as e:
+            logging.error(f'{e} - {traceback.format_exc()}')
+
+    def _scroll_up(self):
         item_count = self._model.get_item_count()
-        if key == kbd.KEY_UP:
-            if self._current_index > 0:
-                self._current_index -= 1
-                if self._current_index - self._scroll_y < 0:
-                    self._scroll_y -= 1
-                self.queue_update()
-            elif self._scroll_y > 0:
+        if self._current_index > 0:
+            self._current_index -= 1
+            if self._current_index - self._scroll_y < 0:
                 self._scroll_y -= 1
-                self.queue_update()
-        elif key == kbd.KEY_DOWN:
-            if self._current_index < item_count - 1:
-                self._current_index += 1
-                if self._current_index - self._scroll_y >= self._rect.height:
-                    self._scroll_y += 1
-                self.queue_update()
-        elif key == kbd.KEY_PGDN:
-            self._scroll_y += self._rect.height
-            if self._scroll_y + self._rect.height > item_count:
-                self._scroll_y = item_count - self._rect.height
-            self._current_index = self._scroll_y
             self.queue_update()
-        elif key == kbd.KEY_PGUP:
-            self._scroll_y -= self._rect.height
-            if self._scroll_y < 0:
-                self._scroll_y = 0
-            self._current_index = self._scroll_y
+        elif self._scroll_y > 0:
+            self._scroll_y -= 1
             self.queue_update()
-        elif key == kbd.KEY_HOME:
-            self._current_index = 0
+
+    def _scroll_down(self):
+        item_count = self._model.get_item_count()
+        if self._current_index < item_count - 1:
+            self._current_index += 1
+            if self._current_index - self._scroll_y >= self._rect.height:
+                self._scroll_y += 1
+            self.queue_update()
+
+    def _page_down(self):
+        item_count = self._model.get_item_count()
+        self._scroll_y += self._rect.height
+        if self._scroll_y + self._rect.height > item_count:
+            self._scroll_y = max(0,item_count - self._rect.height)
+        self._current_index = self._scroll_y
+        self.queue_update()
+
+    def _page_up(self):
+        self._scroll_y -= self._rect.height
+        if self._scroll_y < 0:
             self._scroll_y = 0
-            self.queue_update()
-        elif key == kbd.KEY_ENTER:
-            if self._selectable:
-                self._select(self._current_index)
+        self._current_index = self._scroll_y
+        self.queue_update()
+
+    def _go_home(self):
+        self._current_index = 0
+        self._scroll_y = 0
+        self.queue_update()
+
 
     def _select(self, index):
         self._selected_index = index
