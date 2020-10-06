@@ -43,6 +43,7 @@ class TextView(View):
             ).writefill(line, self._rect.width).reset()
 
         buff.write(self.get_color("bg"))
+        i+=1
         while i < self._rect.height:
             buff.gotoxy(self._rect.x, self._rect.y + i).writefill("", self._rect.width)
             i += 1

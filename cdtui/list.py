@@ -103,13 +103,15 @@ class ListView(View):
             self._model.on_list_changed.add(self._model_changed)
 
     def _model_changed(self, *_):
-        if self._current_index >= self._model.get_item_count():
-            if self._model.get_item_count() > 0:
-                self._current_index = self._model.get_item_count() -1
-                self._scroll_y = max(0, self._current_index-1)
-            else:
-                self._current_index = -1
-                self._scroll_y = 0
+        self._current_index = 0 if self._model.get_item_count() > 0 else -1
+        self._scroll_y = 0
+        #if self._current_index >= self._model.get_item_count():
+        #    if self._model.get_item_count() > 0:
+        #        self._current_index = self._model.get_item_count() -1
+        #        self._scroll_y = max(0, self._current_index-1)
+        #    else:
+        #        self._current_index = -1
+        #        self._scroll_y = 0
 
         self.queue_update()
 
