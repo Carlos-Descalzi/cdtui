@@ -1,7 +1,4 @@
-from . import ansi
-import time
-import sys
-import tty
+from dataclasses import dataclass
 
 COLORS = {
     "titledview.bg": "\u001b[48;5;241m",
@@ -26,49 +23,36 @@ COLORS = {
 }
 
 
+@dataclass
 class Point:
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+    x: int = 0
+    y: int = 0
+
+    def __str__(self) -> str:
+        return f"Point:{self.x},{self.y}"
 
     def copy(self):
         return Point(self.x, self.y)
 
-    def __str__(self):
-        return f"Point:{self.x},{self.y}"
 
-    def __eq__(self, other):
-        return isinstance(other, Point) and self.x == other.x and self.y == other.y
-
-
+@dataclass
 class Dimension:
-    def __init__(self, width=0, height=0):
-        self.width = width
-        self.height = height
-
-    def copy(self):
-        return Dimension(self.width, self.height)
+    width: int = 0
+    height: int = 0
 
     def __str__(self):
         return f"Dimension:{self.width},{self.height}"
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, Dimension)
-            and self.width == other.width
-            and self.height == other.height
-        )
-
-
-class Rect:
-    def __init__(self, x=0, y=0, width=0, height=0):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-
     def copy(self):
-        return Rect(self.x, self.y, self.width, self.height)
+        return Dimension(self.width, self.height)
+
+
+@dataclass
+class Rect:
+    x: int = 0
+    y: int = 0
+    width: int = 0
+    height: int = 0
 
     def __str__(self):
         return f"Rect:{self.x},{self.y},{self.width},{self.height}"
@@ -81,11 +65,5 @@ class Rect:
     def dimension(self):
         return Dimension(self.width, self.height)
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, Rect)
-            and self.x == other.x
-            and self.y == other.y
-            and self.width == other.width
-            and self.height == other.height
-        )
+    def copy(self):
+        return Rect(self.x, self.y, self.width, self.height)

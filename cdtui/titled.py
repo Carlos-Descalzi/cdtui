@@ -1,13 +1,14 @@
 from . import ansi, kbd
-from .base import Rect, COLORS
+from .base import Rect
 from .view import View
-import time
-import sys
-import tty
 
 
 class TitledView(View):
-    def __init__(self, rect=None, title="", inner=None):
+    """
+    A container for a single view with title
+    """
+
+    def __init__(self, rect: Rect = None, title: str = "", inner: View = None):
         super().__init__(rect)
         self._title = title
         self._inner = inner
@@ -34,12 +35,12 @@ class TitledView(View):
     def contains(self, child):
         return self._inner == child
 
-    def set_title(self, title):
+    def set_title(self, title: str):
         self._title = title
         self.queue_update()
 
-    def get_title(self):
-        self._title = title
+    def get_title(self) -> str:
+        return self._title
 
     title = property(get_title, set_title)
 

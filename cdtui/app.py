@@ -1,13 +1,15 @@
-from . import ansi, kbd
-import logging
-import time
-import sys
-import tty
-import os
-import termios
 import atexit
 import fcntl
+import logging
+import os
+import sys
+import termios
+import time
+import tty
 
+from . import ansi, kbd
+
+_logger = logging.getLogger(__name__)
 
 class KeyHandler:
     def __init__(self, handler, valid_on_popup):
@@ -24,6 +26,7 @@ class Application:
         self._active = True
         self._queue = set()
         self._key_handlers = {}
+        self._term_attrs = None
 
     def add_component(self, component):
         component.set_application(self)
@@ -35,18 +38,22 @@ class Application:
         if self._focused_index >= len(self._components):
             self._cycle_focus()
 
-    def main_loop(self):
-
-        term_attrs = termios.tcgetattr(sys.stdin)
+    def _init_term(self):
+        self._term_attrs = termios.tcgetattr(sys.stdin)
         tty.setraw(sys.stdin)
         orig_fl = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
         fcntl.fcntl(sys.stdin, fcntl.F_SETFL, orig_fl | os.O_NONBLOCK)
 
-        def on_exit():
-            ansi.begin().clrscr().cursor_on().put()
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, term_attrs)
+    def _restore_term(self):
+        ansi.begin().clrscr().cursor_on().put()
+        if self._term_attrs:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._term_attrs)
 
-        atexit.register(on_exit)
+    def main_loop(self):
+
+        self._init_term()
+
+        atexit.register(self._restore_term)
 
         self.refresh()
 
@@ -77,13 +84,11 @@ class Application:
                         view.update()
                 else:
                     view.update()
-        except Exception as e:
-            logging.error(e)
+        except Exception:
+            _logger.exception()
 
     def _is_in_popup(self, view):
-        return self._active_popup and (
-            self._active_popup == view or self._active_popup.contains(view)
-        )
+        return self._active_popup and (self._active_popup == view or self._active_popup.contains(view))
 
     def queue_update(self, view):
         self._queue.add(view)
@@ -107,8 +112,8 @@ class Application:
             elif keystroke == kbd.KEY_SHIFT_TAB:
                 self._cycle_focus_back()
             else:
-                # logging.info(keystroke)
                 handler = self._key_handlers.get(keystroke)
+                _logger.debug(f"Key handler for keystroke {keystroke}: {handler}")
 
                 if handler and (handler.valid_on_popup or not self._active_popup):
                     handler.handler(self)

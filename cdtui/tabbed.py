@@ -1,28 +1,32 @@
-from . import ansi, kbd
-from .base import Rect, COLORS
-from .view import View
-import time
-import sys
-import tty
 import logging
+
+from . import ansi, kbd
+from .base import COLORS, Rect
+from .view import View
+
+_logger = logging.getLogger(__name__)
 
 
 class TabbedView(View):
+    """
+    Tabbed view
+    """
+
     class Tab:
-        def __init__(self, title, view):
+        def __init__(self, title: str, view: View):
             self.title = title
             self.view = view
 
-    def __init__(self, rect=None):
+    def __init__(self, rect: Rect = None):
         super().__init__(rect)
         self._tabs = []
         self._active = 0
 
     @property
-    def active_tab(self):
+    def active_tab(self) -> Tab:
         return self._tabs[self._active] if self._tabs else None
 
-    def add_tab(self, title, view):
+    def add_tab(self, title: str, view: View):
         view.application = self.application
         self._tabs.append(TabbedView.Tab(title, view))
 
@@ -31,13 +35,13 @@ class TabbedView(View):
         for tab in self._tabs:
             tab.view.set_application(application)
 
-    def set_focused(self, focused):
+    def set_focused(self, focused: bool):
         super().set_focused(focused)
         active = self.active_tab
         if active:
             active.view.set_focused(focused)
 
-    def contains(self, child):
+    def contains(self, child: View) -> bool:
         for tab in self._tabs:
             if tab.view == child:
                 return True
@@ -60,18 +64,13 @@ class TabbedView(View):
 
         for tab in tabs:
             if tab == active_tab:
-                header_buff.write(self.get_color("selected.bg")).write(
-                    self.get_color("selected.fg")
-                )
+                header_buff.write(self.get_color("selected.bg")).write(self.get_color("selected.fg"))
             else:
                 header_buff.write(self.get_color("bg")).write(self.get_color("fg"))
             header_buff.writefill(f"{tab.title}", max_width).reset()
 
         (
-            ansi.begin()
-            .gotoxy(self._rect.x, self._rect.y)
-            .write(self.get_color("bg"))
-            .writefill("", self._rect.width)
+            ansi.begin().gotoxy(self._rect.x, self._rect.y).write(self.get_color("bg")).writefill("", self._rect.width)
         ).put()
 
         header = str(header_buff)
@@ -85,7 +84,7 @@ class TabbedView(View):
             active_tab.view.set_rect(inner_rect)
             active_tab.view.update()
 
-    def _set_active(self, active):
+    def _set_active(self, active: int):
         self._tabs[self._active].view.visible = False
         self._tabs[self._active].view.set_focused(False)
         self._active = active

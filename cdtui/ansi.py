@@ -1,7 +1,7 @@
-import sys
 import subprocess
-import re
+import sys
 import unicodedata
+from typing import Tuple
 
 UNDERLINE = "\u001b[4m"
 BOLD = "\u001b[1m"
@@ -16,52 +16,52 @@ class UiWriter:
     def __init__(self):
         self._buffer = ""
 
-    def cursor_off(self):
+    def cursor_off(self) -> "UiWriter":
         self._buffer += CURSOR_OFF
         return self
 
-    def cursor_on(self):
+    def cursor_on(self) -> "UiWriter":
         self._buffer += CURSOR_ON
         return self
 
-    def clrscr(self):
+    def clrscr(self) -> "UiWriter":
         self._buffer += CLRSCR
         return self
 
-    def underline(self):
+    def underline(self) -> "UiWriter":
         self._buffer += UNDERLINE
         return self
 
-    def reverse(self):
+    def reverse(self) -> "UiWriter":
         self._buffer += REVERSE
         return self
 
-    def bold(self):
+    def bold(self) -> "UiWriter":
         self._buffer += BOLD
         return self
 
-    def reset(self):
+    def reset(self) -> "UiWriter":
         self._buffer += RESET
         return self
 
-    def gotoxy(self, x, y):
+    def gotoxy(self, x: int, y: int) -> "UiWriter":
         self._buffer += f"\u001b[{y};{x}H"
         return self
 
-    def write(self, string):
+    def write(self, string: str) -> "UiWriter":
         self._buffer += string
         return self
 
-    def writefill(self, string, length, fillchar=" "):
+    def writefill(self, string: str, length: int, fillchar: str = " ") -> "UiWriter":
         str_len = _ansi_string_len(string)
         self._buffer += string + fillchar * (length - str_len)
         return self
 
-    def fg(self, color):
+    def fg(self, color: int) -> "UiWriter":
         self._buffer += f"\u001b[38;5;{color}m"
         return self
 
-    def bg(self, color):
+    def bg(self, color: int) -> "UiWriter":
         self._buffer += f"\u001b[48;5;{color}m"
         return self
 
@@ -69,23 +69,23 @@ class UiWriter:
         try:
             sys.stdout.write(self._buffer)
             sys.stdout.flush()
-        except:
+        except Exception:
             pass
 
-    def trunc(self, length):
+    def trunc(self, length: int) -> "UiWriter":
         while len(self) > length:
             self._buffer = self._buffer[0:-1]
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._buffer
 
-    def __len__(self):
+    def __len__(self) -> int:
         return _ansi_string_len(self._buffer)
 
 
-def _ansi_string_len(string):
-    l = 0
+def _ansi_string_len(string: str) -> int:
+    sl = 0
     skip = False
     for c in string:
         if c == "\u001b":
@@ -93,15 +93,15 @@ def _ansi_string_len(string):
         elif c in "mHJ" and skip:
             skip = False
         elif not skip:
-            l += 2 if unicodedata.east_asian_width(c) == 'W' else 1
-    return l
+            sl += 2 if unicodedata.east_asian_width(c) == "W" else 1
+    return sl
 
 
-def begin():
+def begin() -> UiWriter:
     return UiWriter()
 
 
-def terminal_size():
+def terminal_size() -> Tuple[int, int]:
     output = subprocess.check_output(["stty", "size"]).decode()
     return tuple(map(int, output.strip().split(" ")))
 

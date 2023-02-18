@@ -1,22 +1,26 @@
-from .view import View
 from . import ansi, kbd
-import logging
+from .base import Rect
+from .view import View
 
 
 class TextView(View):
-    def __init__(self, rect=None, text=""):
+    """
+    A text viewer
+    """
+
+    def __init__(self, rect: Rect = None, text: str = ""):
         super().__init__(rect)
         self._text = self._sanitize(text)
         self._scroll_x = 0
         self._scroll_y = 0
 
-    def set_text(self, text):
+    def set_text(self, text: str):
         self._scroll_x = 0
         self._scroll_y = 0
         self._text = self._sanitize(text)
         self.queue_update()
 
-    def get_text(self):
+    def get_text(self) -> str:
         return "\n".join(self._text)
 
     text = property(get_text, set_text)
@@ -24,9 +28,11 @@ class TextView(View):
     def _sanitize(self, text):
         return list(map(self._sanitize_line, text.split("\n")))
 
-    def _sanitize_line(self, text_line):
-        return text_line.replace("\r","").replace("\n", "").replace(
-            ansi.RESET, ansi.RESET + self.get_color("bg") + self.get_color("fg")
+    def _sanitize_line(self, text_line: str) -> str:
+        return (
+            text_line.replace("\r", "")
+            .replace("\n", "")
+            .replace(ansi.RESET, ansi.RESET + self.get_color("bg") + self.get_color("fg"))
         )
 
     def update(self):
@@ -43,7 +49,7 @@ class TextView(View):
             ).writefill(line, self._rect.width).reset()
 
         buff.write(self.get_color("bg"))
-        i+=1
+        i += 1
         while i < self._rect.height:
             buff.gotoxy(self._rect.x, self._rect.y + i).writefill("", self._rect.width)
             i += 1
