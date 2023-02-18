@@ -16,6 +16,16 @@ class KeyHandler:
         self.handler = handler
         self.valid_on_popup = valid_on_popup
 
+class PauseTermSettingsHandler:
+
+    def __init__(self, app):
+        self._app = app
+
+    def __enter__(self):
+        self._app._restore_term()
+
+    def __exit__(self, *_, **__):
+        self._app._init_term()
 
 class Application:
     def __init__(self):
@@ -48,6 +58,9 @@ class Application:
         ansi.begin().clrscr().cursor_on().put()
         if self._term_attrs:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._term_attrs)
+
+    def pause_app(self) -> PauseTermSettingsHandler:
+        return PauseTermSettingsHandler(self)
 
     def main_loop(self):
 
