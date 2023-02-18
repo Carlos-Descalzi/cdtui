@@ -170,7 +170,7 @@ class ListView(View):
                 last_y += 1
             ui_buff.put()
         except Exception:
-            logging.exception()
+            logging.exception("Exception on list")
 
     def on_key_press(self, key):
         try:
@@ -189,7 +189,7 @@ class ListView(View):
                 if self._selectable:
                     self._select(self._current_index)
         except Exception:
-            logging.exception()
+            logging.exception("Exception on key handler")
 
     def _scroll_up(self):
         # item_count = self._model.get_item_count()
